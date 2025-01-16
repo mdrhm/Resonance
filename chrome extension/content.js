@@ -1,5 +1,4 @@
-let userID
-
+let userID, nowPlayingID
 async function getUserID(){
     await document.querySelector('[data-testid="user-widget-link"]').click()
     let userID  = await document.querySelector('[role="menu"]').childNodes[1].querySelector("a").href.split("/").at(-1)
@@ -7,9 +6,39 @@ async function getUserID(){
     return userID
 }
 
+async function getNowPlayingID() {
+    let nowPlayingID = ''
+    if (!document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]')) {
+        await document.querySelector('[data-restore-focus-key="now_playing_view"]').click()
+        nowPlayingID = document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]').href.split("%3A").at(-1)
+        document.querySelector('[data-restore-focus-key="now_playing_view"]').click()
+        return nowPlayingID
+    }
+
+    return new Promise((resolve, reject) => {
+        resolve(document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]').href.split("%3A").at(-1))
+    })
+}
+
 function getSongIDs() {
-    return Array.from(document.querySelectorAll('[role="row"]:not(:has(.rating-container)) [data-testid="internal-track-link"]')
+    let songIDs = Array.from(document.querySelectorAll('[role="row"]:not(:has(.rating-container)) [data-testid="internal-track-link"]')
     ).map((song) => song.href.split("/").at(-1))
+    if (document.querySelector('[data-testid="entityTitle"]') && !document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container')) {
+        songIDs.push(window.location.href.split("/")[4].split("?")[0])
+    }
+    songIDs = songIDs.concat(Array.from(document.querySelectorAll('[data-testid="grid-container"] [data-encore-id="card"]:not(:has(.rating-container)):has(a)')).map((card) => {
+        return card.querySelector("a").href.split("/").at(-1)
+    }))
+
+    const widget = document.querySelector('[data-testid="now-playing-widget"] .rating-container')
+    const panel = document.querySelector('[data-testid="NPV_Panel_OpenDiv"]')
+
+    if (!widget || widget.getAttribute('song-id') !== nowPlayingID || (panel && !panel.querySelector('.rating-container'))) {
+        songIDs.push(nowPlayingID)
+    }
+    console.log(songIDs)
+    return songIDs
+
 }
 
 function markRated() {
@@ -44,64 +73,88 @@ function getRatings(songIDs) {
 }
 
 function populateRatings(ratings) {
+    populateRowRatings(ratings)
+    populatePageRating(ratings)
+    populateCardRatings(ratings)
+    populateNowPlaying(ratings)
+}
+
+function populateRowRatings(ratings) {
     for (let rating of ratings) {
         let row = Array.from(document.querySelectorAll('[data-testid="tracklist-row"]')).filter((row) => {
             return row.querySelector('a').href.split("/").at(-1) === rating["spotify_id"]
         })[0]
-        if(!row) {
+        if (!row) {
             continue
-        }
-        else if (row.querySelector(".rating-container")) {
+        } else if (row.querySelector(".rating-container")) {
             row.querySelector(".rating-container").remove()
         }
-        row.lastChild.innerHTML = generateRating(rating) + row.lastChild.innerHTML
+        row.lastChild.insertBefore(createElementWithHTML(generateRating(rating)), row.lastChild.children[0]);
         addRatingClick(row.querySelector(".rating-container"))
     }
 }
 
-async function populateNowPlaying(){
+function populateNowPlaying(ratings) {
+    function addToPanel() {
+        const panelDiv = document.querySelector('[data-testid="NPV_Panel_OpenDiv"]')
+        const widgetDiv = document.querySelector('[data-testid="now-playing-widget"] .rating-container')
+        if (!panelDiv) {
+            return
+        }
+        if (panelDiv.querySelector(".rating-container")) {
+            panelDiv.querySelector(".rating-container").remove()
+        }
+        const widgetDivClone = widgetDiv.cloneNode(true)
+        addRatingClick(widgetDivClone)
+        panelDiv.children[0].appendChild(widgetDivClone)
+    }
+
     const panelDiv = document.querySelector('[data-testid="NPV_Panel_OpenDiv"] .rating-container')
     const widgetDiv = document.querySelector('[data-testid="now-playing-widget"] .rating-container')
-
-    if (panelDiv && widgetDiv) {
+    let rating = ratings.filter((r) => {
+        return nowPlayingID === r["spotify_id"]
+    })[0]
+    if (!rating) {
         return
     }
-
-    let nowPlayingID = ''
-    if (!document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]')) {
-        await document.querySelector('[data-restore-focus-key="now_playing_view"]').click()
-        nowPlayingID = document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]').href.split("%3A").at(-1)
-        document.querySelector('[data-restore-focus-key="now_playing_view"]').click()
+    if (panelDiv) {
+        panelDiv.remove()
     }
-    else {
-        nowPlayingID = document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]').href.split("%3A").at(-1)
+    if (widgetDiv) {
+        widgetDiv.remove()
     }
-    getRatings([nowPlayingID]).then(data => {
-        if (panelDiv) {
-            panelDiv.remove()
-        }
-        else if (widgetDiv) {
-            widgetDiv.remove()
-        }
-        let rating = data[0]
-        let ratingDiv = generateRating(rating)
-        if (document.querySelector('[data-testid="NPV_Panel_OpenDiv"] > div')) {
-            document.querySelector('[data-testid="NPV_Panel_OpenDiv"] > div').innerHTML += ratingDiv
-        }
-        document.querySelector('[data-testid="now-playing-widget"]').childNodes[1].innerHTML += ratingDiv
-    })
+    let ratingDiv = createElementWithHTML(generateRating(rating))
+    addRatingClick(ratingDiv)
+    document.querySelector('[data-testid="now-playing-widget"]').childNodes[1].appendChild(ratingDiv)
+    addToPanel()
 }
 
-function populatePageRating(){
-    if (document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container')){
+function populatePageRating(ratings) {
+    let pageID = window.location.href.split("/")[4].split("?")[0]
+    let pageRating = ratings.filter((rating) => {return rating["spotify_id"] === pageID})[0]
+    if (!pageRating) {
         return
     }
-    let pageID = window.location.href.split("/")[4].split("?")[0]
-    getRatings([pageID]).then(data => {
-        let pageRating = data[0]
-        document.querySelector(':has(> [data-testid="entityTitle"])').innerHTML += generateRating(pageRating)
-        addRatingClick(document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container'))
-    })
+    if (document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container')) {
+        document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container').remove()
+    }
+    document.querySelector(':has(> [data-testid="entityTitle"])').innerHTML += generateRating(pageRating)
+    addRatingClick(document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container'))
+}
+
+function populateCardRatings(ratings){
+    for (rating of ratings) {
+        let card = Array.from(document.querySelectorAll('[data-testid="grid-container"] [data-encore-id="card"]:not(:has(.rating-container)):has(a)')).filter((card) => {
+            return card.querySelector("a").href.split("/").at(-1) === rating["spotify_id"]
+        })[0]
+        if (!card) {
+            continue
+        }
+        else if (card.querySelector('[data-encore-id="cardSubtitle"] .rating-container')) {
+            card.querySelector('[data-encore-id="cardSubtitle"] .rating-container').remove()
+        }
+        card.innerHTML += generateRating(rating)
+    }
 }
 
 function generateRating(rating) {
@@ -112,7 +165,9 @@ function generateRating(rating) {
     return `<div class="rating-container" song-id="${songID}">
                 <div class="rating">
                     <span>★</span>
-                    ${avgRating}/5 (${numberOfRatings})
+                    <div class = "avg-rating">${avgRating}</div>
+                    <div class = "out-of">/5</div>
+                    <div class = "num-of-ratings">&nbsp;(${numberOfRatings})</div>
                 </div>
                 <div class = "ratings">
                     <div class="give-rating">
@@ -173,11 +228,13 @@ function updateRating(method, songID, rating) {
 
 setInterval(() => {
     getUserID().then(user => {
-        userID = user
-        getRatings(getSongIDs()).then(data => {
-            populateRatings(data)
+        getNowPlayingID().then(nPI => {
+            nowPlayingID = nPI
+            userID = user
+            getRatings(getSongIDs()).then(data => {
+                populateRatings(data)
+            })
         })
-        populatePageRating()
         // populateNowPlaying()
     })
 }, 5000)
@@ -195,3 +252,8 @@ setInterval(() => {
 //     attributes: true
 // });
 
+function createElementWithHTML(htmlString) {
+    const temp = document.createElement('div');
+    temp.innerHTML = htmlString;
+    return temp.firstChild;
+}

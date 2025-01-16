@@ -1,13 +1,16 @@
 .rating {
     display: flex;
     flex-direction: row;
-    gap: 5px;
     justify-content: center;
     align-items: center;
+
+    span {
+        margin-right: 5px;
+    }
 }
 
-[aria-colindex="5"] {
-    gap: 18px;
+[aria-label="Add to playlist"], [aria-label="Add to Liked Songs"] {
+    margin-right: 18px !important;
 }
 
 .give-rating > span:hover:before {
@@ -81,7 +84,7 @@
     position: absolute;
 }
 
-:has(> [data-testid="now-playing-widget"]), [data-testid="NPV_Panel_OpenDiv"], :has(> [data-testid="entityTitle"]) {
+[data-testid="now-playing-widget"], [data-testid="NPV_Panel_OpenDiv"], :has(> [data-testid="entityTitle"]) {
     .rating-container {
         flex-direction: row-reverse;
         align-items: center;
@@ -89,6 +92,7 @@
         height: 40px;
         width: 150px;
         gap: 10px;
+        font-size: 110%;
     }
     .rating {
         visibility: visible;
@@ -98,7 +102,7 @@
     }
     .ratings {
         position: initial;
-        width: 100px;
+        width: 105px;
         display: flex;
         height: 20px;
     }
@@ -129,6 +133,10 @@
         justify-content: start;
         height: 25px;
         margin-top: -15px;
+        gap: 20px;
+    }
+    .ratings {
+        justify-content: start;
     }
     div:has(> .rating-container){
         display: flex;
@@ -138,3 +146,34 @@
     }
 }
 
+[data-encore-id="card"] {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+
+    span {
+        min-width: fit-content;
+    }
+
+    .rating-container {
+        min-width: max-content;
+        justify-content: start;
+        padding: 5px 0px;
+        font-size: 85%;
+    }
+
+    .out-of {
+        display: none;
+    }
+}
+
+[data-testid="now-playing-widget"] {
+    .rating-container {
+        font-size: 95%;
+        height: 20px;
+    }
+    .ratings {
+        justify-content: start;
+    }
+}
