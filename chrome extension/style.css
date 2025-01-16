@@ -10,18 +10,16 @@
     gap: 18px;
 }
 
-.give-rating {
-    display: flex;
-}
-
 .give-rating > span:hover:before {
     content: "\2605";
     position: absolute;
 }
 
-.give-rating {
+.give-rating, .existing-rating {
     unicode-bidi: bidi-override;
     direction: rtl;
+    display: flex;
+
 }
 .give-rating > span:hover:before,
 .give-rating > span:hover ~ span:before {
@@ -29,13 +27,13 @@
     position: absolute;
 }
 
-.give-rating > span {
+.give-rating > span, .existing-rating > span {
     display: inline-block;
     position: relative;
     width: 1.1em;
 }
 
-.rating > span, .give-rating > span {
+.rating > span, .give-rating > span, .existing-rating > span {
     font-size: 120% !important;
 }
 
@@ -53,14 +51,90 @@
     visibility: hidden;
 }
 
-[data-testid="tracklist-row"]:hover .give-rating {
+[data-testid="tracklist-row"]:hover .existing-rating, .ratings:hover > .give-rating {
     visibility: visible !important;
 }
 
-.give-rating {
+.ratings:hover > .existing-rating {
+    visibility: hidden !important;
+}
+
+.give-rating, .existing-rating {
     visibility: hidden;
 }
 
 .rating-container > div {
     position: absolute;
 }
+
+.give-rating span {
+    cursor: pointer;
+}
+
+.ratings {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ratings > div {
+    position: absolute;
+}
+
+:has(> [data-testid="now-playing-widget"]), [data-testid="NPV_Panel_OpenDiv"], :has(> [data-testid="entityTitle"]) {
+    .rating-container {
+        flex-direction: row-reverse;
+        align-items: center;
+        justify-content: start;
+        height: 40px;
+        width: 150px;
+        gap: 10px;
+    }
+    .rating {
+        visibility: visible;
+        right: 0%;
+        font-size: 90%;
+        position: inherit;
+    }
+    .ratings {
+        position: initial;
+        width: 100px;
+        display: flex;
+        height: 20px;
+    }
+    .rating > span {
+        display: none;
+    }
+    .existing-rating {
+        visibility: visible;
+    }
+    .rating-container span {
+        font-size: 115% !important;
+    }
+    div:has(> .rating-container){
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+    }
+}
+
+[data-testid="NPV_Panel_OpenDiv"] {
+    .rating {
+        visibility: visible;
+        right: 0%;
+        font-size: 90%;
+    }
+    .rating-container {
+        font-size: 120%;
+        justify-content: start;
+        height: 25px;
+        margin-top: -15px;
+    }
+    div:has(> .rating-container){
+        display: flex;
+    }
+    div:has(> .rating-container) > div {
+        width: 100%;
+    }
+}
+
