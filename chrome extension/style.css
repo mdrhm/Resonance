@@ -132,8 +132,8 @@
         font-size: 120%;
         justify-content: start;
         height: 25px;
-        margin-top: -15px;
         gap: 20px;
+        margin: -10px 0px;
     }
     .ratings {
         justify-content: start;
@@ -161,6 +161,12 @@
         justify-content: start;
         padding: 5px 0px;
         font-size: 85%;
+        height: auto;
+    }
+
+    div:has([data-encore-id="cardSubtitle"]){
+        height: -webkit-fill-available;
+        align-items: start;
     }
 
     .out-of {
@@ -176,4 +182,28 @@
     .ratings {
         justify-content: start;
     }
+}
+
+.self {
+    .rating span {
+        display: block;
+    }
+    .ratings {
+        display: none;
+    }
+}
+
+[data-testid="top-result-card"] {
+    .rating-container {
+        height: 20px;
+        justify-content: end;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        font-size: 110%;
+    }
+    .out-of{
+        display: none;
+    }
+
 }

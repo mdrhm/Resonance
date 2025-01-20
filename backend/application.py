@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template, session, redirect, Response
 from flask_cors import CORS
+import json
 import os
 import hashlib
 from queries import SELECT_FROM_WHERE, INSERT_INTO, DELETE_FROM_WHERE, UPDATE_SET_WHERE
@@ -14,7 +15,7 @@ def ratings():
     match request.method:
         case 'GET':
             user_id = request.args.get('user')
-            songs_arr = request.args.get('song').split("-")
+            songs_arr = json.loads(request.args.get('song'))
             songs = "(" + ", ".join(map(lambda x: "'" + x + "'", songs_arr)) + ")"
             ratings = SELECT_FROM_WHERE("spotify_id, AVG(rating) as avg_rating, COUNT(rating) as num_of_ratings", "rating", "spotify_id IN " + songs + " GROUP BY spotify_id")
             songs_with_ratings = list(map(lambda x: x["spotify_id"], ratings))
@@ -42,6 +43,5 @@ def ratings():
             rating_after_deleted = {"spotify_id": song, "rating": "-", "num_of_ratings": 0} if not ratings else  ratings[0]
             rating_after_deleted["user_rating"] = {"rated": "false"}
             return rating_after_deleted
-
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True, port=8000)

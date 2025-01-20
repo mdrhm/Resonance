@@ -1,8 +1,19 @@
 {
   "manifest_version": 3,
-  "name": "Webpage Editor",
+  "name": "Resonance",
+  "icons": {
+
+    "16": "logo.png",
+
+    "32": "logo.png",
+
+    "48": "logo.png",
+
+    "128": "logo.png"
+
+  },
   "version": "1.0",
-  "description": "Edit elements on any webpage",
+  "description": "Rate and review your favorite Spotify tracks effortlessly",
   "permissions": [
     "activeTab"
   ],
