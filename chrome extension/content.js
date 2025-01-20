@@ -34,7 +34,7 @@ async function getNowPlayingID() {
 }
 
 function getSongIDs() {
-    let songIDs = Array.from(document.querySelectorAll('[data-encore-id="card"]:not(:has(.rating-container)):has(a) a, [data-testid="tracklist-row"]:not(:has(.rating-container)) [data-testid="internal-track-link"], [data-testid="tracklist-row"]:not(:has(.rating-container)) a:has(.btE2c3IKaOXZ4VNAb8WQ), [data-testid="top-result-card"]:not(:has(.rating-container)) a:has(div)')).map((card) => {
+    let songIDs = Array.from(document.querySelectorAll('[data-encore-id="card"]:not(:has(.rating-container)):has(a) a, [data-testid="tracklist-row"]:not(:has(.rating-container)) [data-testid="internal-track-link"], [data-testid="tracklist-row"]:not(:has(.rating-container)) a.btE2c3IKaOXZ4VNAb8WQ, [data-testid="top-result-card"]:not(:has(.rating-container)) a:has(div)')).map((card) => {
         return card.href.split("/").at(-1)
     })
     if (document.querySelector('[data-testid="entityTitle"]') && !document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container')) {
@@ -92,7 +92,7 @@ function populateRatings(ratings) {
 
 function populateRowRatings(ratings) {
     for (let rating of ratings) {
-        let row = Array.from(document.querySelectorAll('[data-testid="tracklist-row"]')).filter((row) => {
+        let row = Array.from(document.querySelectorAll('[data-testid="tracklist-row"]:has([data-testid="internal-track-link"]), [data-testid="tracklist-row"]:has(a.btE2c3IKaOXZ4VNAb8WQ)')).filter((row) => {
             return row.querySelector('a').href.split("/").at(-1) === rating["spotify_id"]
         })[0]
         if (!row) {
@@ -226,12 +226,13 @@ function addRatingClick(container) {
 }
 
 function formatNumberOfRatings(numOfRatings) {
+    if (numOfRatings < 1000) {
+        return numOfRatings
+    }
     numOfRatings = parseInt(numOfRatings)
     const abvs = ['K', 'M', 'B']
     const commas = parseInt(Math.log(numOfRatings) / Math.log(1000))
-    if (commas === 0) {
-        return numOfRatings
-    }
+
     return (numOfRatings/(Math.pow(1000, commas))).toFixed(1) + abvs[commas - 1]
 }
 
