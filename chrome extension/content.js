@@ -1,4 +1,17 @@
 let userID, nowPlayingID
+
+function addLogo() {
+    const logoContainer = document.querySelector('[data-testid="global-nav-bar"] div')
+    if (logoContainer.children.length > 1) {
+        return
+    }
+    const plus = document.createElement('div');
+    plus.innerHTML = '+'
+    const resonanceLogo = logoContainer.children[0].cloneNode(true)
+    resonanceLogo.innerHTML = '<img src="https://resonanceapi.pythonanywhere.com/logo.svg">'
+    logoContainer.appendChild(plus)
+    logoContainer.appendChild(resonanceLogo)
+}
 async function getUserID(){
     await document.querySelector('[data-testid="user-widget-link"]').click()
     let userID  = await document.querySelector('[role="menu"]').childNodes[1].querySelector("a").href.split("/").at(-1)
@@ -232,7 +245,9 @@ function updateRating(method, songID, rating) {
         })
 }
 
+
 setInterval(() => {
+    addLogo()
     getUserID().then(user => {
         getNowPlayingID().then(nPI => {
             nowPlayingID = nPI
@@ -244,6 +259,7 @@ setInterval(() => {
         // populateNowPlaying()
     })
 }, 5000)
+
 
 // MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 //
@@ -257,6 +273,3 @@ setInterval(() => {
 //     subtree: true,
 //     attributes: true
 // });
-
-function createElementWithHTML(htmlString) {
-}

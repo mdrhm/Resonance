@@ -205,5 +205,8 @@
     .out-of{
         display: none;
     }
+}
 
+[data-testid="global-nav-bar"] div:nth-child(1) {
+    gap: 0px;
 }
