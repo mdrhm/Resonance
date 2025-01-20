@@ -13,7 +13,7 @@
 
   },
   "version": "1.0",
-  "description": "Rate and review your favorite Spotify tracks effortlessly",
+  "description": "Rate your favorite Spotify tracks effortlessly",
   "permissions": [
     "activeTab"
   ],

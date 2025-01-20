@@ -184,7 +184,7 @@ function generateRating(rating) {
                     <span>★</span>
                     <div class = "avg-rating">${avgRating}</div>
                     <div class = "out-of">/5</div>
-                    <div class = "num-of-ratings">&nbsp;(${numberOfRatings})</div>
+                    <div class = "num-of-ratings">&nbsp;(${formatNumberOfRatings(numberOfRatings)})</div>
                 </div>
                 <div class = "ratings">
                     <div class="give-rating">
@@ -223,6 +223,16 @@ function addRatingClick(container) {
             }
         })
     }
+}
+
+function formatNumberOfRatings(numOfRatings) {
+    numOfRatings = parseInt(numOfRatings)
+    const abvs = ['K', 'M', 'B']
+    const commas = parseInt(Math.log(numOfRatings) / Math.log(1000))
+    if (commas === 0) {
+        return numOfRatings
+    }
+    return (numOfRatings/(Math.pow(1000, commas))).toFixed(1) + abvs[commas - 1]
 }
 
 function updateRating(method, songID, rating) {
