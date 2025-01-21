@@ -210,3 +210,7 @@
 [data-testid="global-nav-bar"] div:nth-child(1) {
     gap: 0px;
 }
+
+[data-testid="add-to-playlist-button"] {
+    min-width: fit-content !important;
+}

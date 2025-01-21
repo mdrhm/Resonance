@@ -29,7 +29,7 @@ async function getNowPlayingID() {
     }
 
     return new Promise((resolve, reject) => {
-        resolve(document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]').href.split("%3A").at(-1))
+        resolve('track:' + document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]').href.split("%3A").at(-1))
     })
 }
 
