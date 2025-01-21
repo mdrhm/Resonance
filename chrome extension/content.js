@@ -23,7 +23,7 @@ async function getNowPlayingID() {
     let nowPlayingID = ''
     if (!document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]')) {
         await document.querySelector('[data-restore-focus-key="now_playing_view"]').click()
-        nowPlayingID = document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]').href.split("%3A").at(-1)
+        nowPlayingID = 'track:' + document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]').href.split("%3A").at(-1)
         document.querySelector('[data-restore-focus-key="now_playing_view"]').click()
         return nowPlayingID
     }
@@ -35,10 +35,10 @@ async function getNowPlayingID() {
 
 function getSongIDs() {
     let songIDs = Array.from(document.querySelectorAll('[data-encore-id="card"]:not(:has(.rating-container)):has(a) a, [data-testid="tracklist-row"]:not(:has(.rating-container)) [data-testid="internal-track-link"], [data-testid="tracklist-row"]:not(:has(.rating-container)) a.btE2c3IKaOXZ4VNAb8WQ, [data-testid="top-result-card"]:not(:has(.rating-container)) a:has(div)')).map((card) => {
-        return card.href.split("/").at(-1)
+        return card.href.split("/").at(-2) + ':' + card.href.split("/").at(-1)
     })
     if (document.querySelector('[data-testid="entityTitle"]') && !document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container')) {
-        songIDs.push(window.location.href.split("/")[4].split("?")[0])
+        songIDs.push(window.location.href.split("/")[3] + ':' + window.location.href.split("/")[4].split("?")[0])
     }
 
     const widget = document.querySelector('[data-testid="now-playing-widget"] .rating-container')
@@ -93,7 +93,7 @@ function populateRatings(ratings) {
 function populateRowRatings(ratings) {
     for (let rating of ratings) {
         let row = Array.from(document.querySelectorAll('[data-testid="tracklist-row"]:has([data-testid="internal-track-link"]), [data-testid="tracklist-row"]:has(a.btE2c3IKaOXZ4VNAb8WQ)')).filter((row) => {
-            return row.querySelector('a').href.split("/").at(-1) === rating["spotify_id"]
+            return row.querySelector('a').href.split("/").at(-2) + ':' + row.querySelector('a').href.split("/").at(-1) === rating["spotify_id"]
         })[0]
         if (!row) {
             continue
@@ -144,7 +144,7 @@ function populatePageRating(ratings) {
     if (window.location.href.split("/").length <= 4) {
         return
     }
-    let pageID = window.location.href.split("/")[4].split("?")[0]
+    let pageID = window.location.href.split("/")[3] + ':' + window.location.href.split("/")[4].split("?")[0]
     let pageRating = ratings.filter((rating) => {return rating["spotify_id"] === pageID})[0]
     if (!pageRating) {
         return
@@ -153,7 +153,7 @@ function populatePageRating(ratings) {
         document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container').remove()
     }
     const rating =  generateRating(pageRating)
-    if (pageRating["spotify_id"] === userID) {
+    if (pageRating["spotify_id"] === 'user:' + userID) {
         rating.classList.add("self")
         rating.querySelector(".ratings").remove()
     }
@@ -163,7 +163,7 @@ function populatePageRating(ratings) {
 function populateCardRatings(ratings){
     for (rating of ratings) {
         Array.from(document.querySelectorAll('[data-encore-id="card"]:has(a), [data-testid="top-result-card"]')).filter((card) => {
-            return card.querySelector("a").href.split("/").at(-1) === rating["spotify_id"]
+            return card.querySelector("a").href.split("/").at(-2) + ':' + card.querySelector("a").href.split("/").at(-1) === rating["spotify_id"]
         }).forEach((card) => {
             if (card.querySelector('.rating-container')) {
                 card.querySelector('.rating-container').remove()
