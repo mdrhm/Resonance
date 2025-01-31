@@ -2,7 +2,6 @@ from flask import Flask, request, render_template, session, redirect, Response
 from flask_cors import CORS
 import json
 import os
-import hashlib
 from queries import SELECT_FROM_WHERE, INSERT_INTO, DELETE_FROM_WHERE, UPDATE_SET_WHERE
 
 app = Flask(__name__)
@@ -23,7 +22,7 @@ def ratings():
             for song in songs_without_ratings:
                 ratings += [{"spotify_id": song, "rating": "-", "num_of_ratings": 0}]
             for index, rating in enumerate(ratings):
-                user_rating = SELECT_FROM_WHERE("rating", "rating", "user_id = '" + user_id + "' AND spotify_id = '" + rating["spotify_id"] + "'")
+                user_rating = None if not user_id else SELECT_FROM_WHERE("rating", "rating", "user_id = '" + user_id + "' AND spotify_id = '" + rating["spotify_id"] + "'")
                 ratings[index]["user_rating"] = {"rated": "false"} if not user_rating else {"rated": "true", "rating": user_rating[0]["rating"]}
             return {"ratings": ratings}
         case 'POST':
@@ -43,5 +42,18 @@ def ratings():
             rating_after_deleted = {"spotify_id": song, "rating": "-", "num_of_ratings": 0} if not ratings else  ratings[0]
             rating_after_deleted["user_rating"] = {"rated": "false"}
             return rating_after_deleted
+
+def run_scheduler():
+    def generate_reports():
+        print(SELECT_FROM_WHERE('*', 'rating', '1=1 LIMIT 1'))
+        return SELECT_FROM_WHERE('*', 'rating', '1=1 LIMIT 1')
+    import schedule
+    import time
+    schedule.every(app.config['GENERATE_REPORTS_INTERVAL']).seconds.do(generate_reports)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True, port=8000)
+    run_scheduler()

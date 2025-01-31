@@ -8,18 +8,33 @@ function addLogo() {
     const plus = document.createElement('div');
     plus.innerHTML = '+'
     const resonanceLogo = logoContainer.children[0].cloneNode(true)
-    resonanceLogo.innerHTML = '<img src="https://resonanceapi.pythonanywhere.com/logo.svg">'
+    resonanceLogo.innerHTML = '<img src="https://resonanceapi.pythonanywhere.com/images/logo.svg">'
     logoContainer.appendChild(plus)
     logoContainer.appendChild(resonanceLogo)
 }
 async function getUserID(){
-    await document.querySelector('[data-testid="user-widget-link"]').click()
-    let userID  = await document.querySelector('[role="menu"]').childNodes[1].querySelector("a").href.split("/").at(-1)
-    document.querySelector('[data-testid="user-widget-link"]').click()
+    let userID = Array.from(document.querySelectorAll('[data-encore-id="listRow"]')).filter((row) => {return row.getAttribute('aria-labelledby').includes('user')}).map((row) => {return row.getAttribute('aria-labelledby').split(':').at(2)})[0]
+    if (userID) {
+        return userID
+    }
+    if (!document.querySelector('[data-testid="user-widget-link"]')){
+        return null
+    }
+    const menu = document.querySelector('[role="menu"]')
+    if(!menu) {
+        await document.querySelector('[data-testid="user-widget-link"]').click()
+    }
+    userID  = await document.querySelector('[role="menu"]').childNodes[1].querySelector("a").href.split("/").at(-1)
+    if(!menu) {
+        document.querySelector('[data-testid="user-widget-link"]').click()
+    }
     return userID
 }
 
 async function getNowPlayingID() {
+    if (!document.querySelector('[data-testid="user-widget-link"]')){
+        return
+    }
     let nowPlayingID = ''
     if (!document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]')) {
         await document.querySelector('[data-restore-focus-key="now_playing_view"]').click()
@@ -43,10 +58,11 @@ function getSongIDs() {
 
     const widget = document.querySelector('[data-testid="now-playing-widget"] .rating-container')
 
-    if (!widget || widget.getAttribute('song-id') !== nowPlayingID) {
+    if (nowPlayingID && (!widget || widget.getAttribute('song-id') !== nowPlayingID)) {
         songIDs.push(nowPlayingID)
     }
-    console.log(songIDs)
+    songIDs = songIDs.map((songID) => {return songID.split("?").at(0)})
+    console.log(JSON.stringify(songIDs))
     return songIDs
 
 }
@@ -69,7 +85,7 @@ function getRatings(songIDs) {
     headers.append('Access-Control-Allow-Origin', 'https://open.spotify.com');
     headers.append('Access-Control-Allow-Credentials', 'true');
 
-    return fetch(`https://resonanceapi.pythonanywhere.com/ratings?user=${userID}&song=${songIDs}`, {
+    return fetch(`https://resonanceapi.pythonanywhere.com/ratings?${(userID) ? 'user=' + userID + '&' : ''}song=${songIDs}`, {
         method: 'GET',
         headers: headers
     })
@@ -267,9 +283,8 @@ setInterval(() => {
                 populateRatings(data)
             })
         })
-        // populateNowPlaying()
     })
-}, 5000)
+}, 1000)
 
 
 // MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
