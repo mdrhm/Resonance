@@ -10,7 +10,7 @@
 }
 
 [aria-label="Add to playlist"], [aria-label="Add to Liked Songs"] {
-    margin-right: 18px !important;
+    margin-right: 25px !important;
 }
 
 .give-rating > span:hover:before {
