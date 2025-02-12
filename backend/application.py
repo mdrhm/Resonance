@@ -1,15 +1,11 @@
-from flask import Flask, request, render_template, session, redirect, Response
+from flask import Flask, request
 from flask_cors import CORS
 import json
-import os
-import hashlib
-from queries import SELECT_FROM_WHERE, INSERT_INTO, DELETE_FROM_WHERE, UPDATE_SET_WHERE
+from queries import SELECT_FROM_WHERE, INSERT_INTO, DELETE_FROM_WHERE
 from spotify import get_tracks, get_albums, get_artists, get_playlists
 
 app = Flask(__name__)
 CORS(app)
-app.config["SESSION_PERMANENT"] = False
-app.secret_key = os.urandom(24)
 
 @app.route('/ratings', methods=['GET', 'POST', 'DELETE', 'PUT'])
 def ratings():
@@ -45,31 +41,23 @@ def ratings():
             rating_after_deleted["user_rating"] = {"rated": "false"}
             return rating_after_deleted
 
-@app.route('/user/<user>/<entity_type>s', methods=['GET', 'POST', 'DELETE', 'PUT'])
+@app.route('/users/<user>/<entity_type>s', methods=['GET', 'POST', 'DELETE', 'PUT'])
 def user_ratings(user, entity_type):
-    offset = request.args.get('offset') or 0
-    entities = SELECT_FROM_WHERE("rating, spotify_id", "rating", "user_id = '" + user + "' AND spotify_id LIKE '" + entity_type + "%' ORDER BY rating_id DESC LIMIT 50 OFFSET " + str(offset))
+    offset = 0 if not request.args.get('offset') else max(0, int(request.args.get('offset')))
+    limit = 50 if not request.args.get('limit') else int(request.args.get('limit'))
+    entities = SELECT_FROM_WHERE("rating, spotify_id", "rating", f"user_id = '{user}' AND spotify_id LIKE '{entity_type}%' ORDER BY rating_id DESC LIMIT {str(limit)} OFFSET {str(offset)}")
     match entity_type:
         case 'track':
-            return {"tracks": get_tracks(entities)}
+            info = {"tracks": get_tracks(entities)}
         case 'album':
-            return {"albums": get_albums(entities)}
+            info = {"albums": get_albums(entities)}
         case 'artist':
-            return {"artists": get_artists(entities)}
+            info = {"artists": get_artists(entities)}
         case 'playlist':
-            return {"playlists": get_playlists(entities)}
-
-def run_scheduler():
-    def generate_reports():
-        print(SELECT_FROM_WHERE('*', 'rating', '1=1 LIMIT 1'))
-        return SELECT_FROM_WHERE('*', 'rating', '1=1 LIMIT 1')
-    import schedule
-    import time
-    schedule.every(app.config['GENERATE_REPORTS_INTERVAL']).seconds.do(generate_reports)
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+            info = {"playlists": get_playlists(entities)}
+    if SELECT_FROM_WHERE("rating, spotify_id", "rating", f"user_id = '{user}' AND spotify_id LIKE '{entity_type}%' ORDER BY rating_id DESC LIMIT {str(limit)} OFFSET {str(offset + limit)}"):
+        info["next_page"] = f"https://resonanceapi.pythonanywhere.com/users/{user}/{entity_type}s?offset={offset + limit}&limit={limit}"
+    return info
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True, port=8000)
-    run_scheduler()

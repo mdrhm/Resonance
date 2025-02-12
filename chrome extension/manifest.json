@@ -20,10 +20,12 @@
   "content_scripts": [
     {
       "js": [
-        "content.js"
+        "content.js",
+        "user.js"
       ],
       "css": [
-        "style.css"
+        "style.css",
+        "user.css"
       ],
       "matches": ["https://open.spotify.com/*"]
     }

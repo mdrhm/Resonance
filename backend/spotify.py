@@ -2,7 +2,6 @@ import os
 import requests
 import base64
 from dotenv import load_dotenv
-from functools import lru_cache
 from multiprocessing import Pool
 
 load_dotenv()
