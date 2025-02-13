@@ -316,11 +316,25 @@ function initializeDiv() {
     document.getElementById('artists-button').addEventListener('click', renderArtists);
     document.getElementById('playlists-button').addEventListener('click', renderPlaylists);
 
-    document.querySelector('.modal-container [aria-label="Close"]').addEventListener('click', () => {
-        document.querySelector('.overlay').remove()
+    document.querySelector('.modal-container [aria-label="Close"]').addEventListener('click', closeDiv)
+
+    document.querySelector('.overlay').addEventListener('click', (e) => {
+        if(!document.querySelector('.modal-container').contains(e.target)){
+            closeDiv()
+        }
+    })
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            closeDiv()
+        }
     })
 
     renderTracks();
+}
+
+function closeDiv() {
+    document.querySelector('.overlay')?.remove()
 }
 
 async function getInfo(entityType) {

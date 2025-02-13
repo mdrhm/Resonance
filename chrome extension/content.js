@@ -1,4 +1,5 @@
 let userID, nowPlayingID
+let nowPlayingInfo = {}
 
 function addLogo() {
     const logoContainer = document.querySelector('[data-testid="global-nav-bar"] div')
@@ -32,24 +33,37 @@ async function getUserID(){
 }
 
 async function getNowPlayingID() {
-    if (!document.querySelector('[data-testid="user-widget-link"]')){
+    if (!document.querySelector('[data-testid="user-widget-link"]')) {
         return
     }
-    let nowPlayingID = ''
-    if (!document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]')) {
-        await document.querySelector('[data-restore-focus-key="now_playing_view"]').click()
-        nowPlayingID = 'track:' + document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]').href.split("%3A").at(-1)
-        document.querySelector('[data-restore-focus-key="now_playing_view"]').click()
-        return nowPlayingID
+    if (document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]')) {
+        return new Promise((resolve, reject) => {
+            resolve('track:' + document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]').href.split("%3A").at(-1))
+        })
     }
 
-    return new Promise((resolve, reject) => {
-        resolve('track:' + document.querySelector('[data-testid="NPV_Panel_OpenDiv"] [data-testid="context-link"]').href.split("%3A").at(-1))
-    })
+    let nowPlayingTrack = document.querySelector('[data-testid="now-playing-widget"] a')
+    if (!nowPlayingTrack.href.includes('album')) {
+        document.querySelector('[data-testid="NPV_Panel_OpenDiv"] .rating-container')?.remove()
+        document.querySelector('[data-testid="now-playing-widget"] .rating-container')?.remove()
+        return
+    }
+    if (nowPlayingInfo["name"] === nowPlayingTrack.text && nowPlayingInfo["album"] === nowPlayingTrack.href.split("/").at(-1)) {
+        return nowPlayingID
+    }
+    nowPlayingInfo = {
+        name: nowPlayingTrack.text,
+        album: nowPlayingTrack.href.split("/").at(-1)
+    }
+
+    const response = await fetch(`https://resonanceapi.pythonanywhere.com/albums/${nowPlayingInfo["album"]}/tracks?name=${encodeURIComponent(nowPlayingInfo["name"])}`);
+    const data = await response.json();
+    return data["id"]
+
 }
 
 function getSongIDs() {
-    let songIDs = Array.from(document.querySelectorAll('[data-encore-id="card"]:not(:has(.rating-container)):has(a) a, [data-testid="tracklist-row"]:not(:has(.rating-container)) [data-testid="internal-track-link"], [data-testid="tracklist-row"]:not(:has(.rating-container)) a.btE2c3IKaOXZ4VNAb8WQ, [data-testid="top-result-card"]:not(:has(.rating-container)) a:has(div)')).map((card) => {
+    let songIDs = Array.from(document.querySelectorAll('[data-encore-id="card"]:not(:has(.rating-container)):has(a) a, [data-testid="tracklist-row"]:not(:has(.rating-container)) [data-testid="internal-track-link"], [data-testid="tracklist-row"]:not(:has(.rating-container)) a.btE2c3IKaOXZ4VNAb8WQ, [data-testid="top-result-card"]:not(:has(.rating-container)) a:has(div), .Z35BWOA10YGn5uc9YgAp:not(:has(.rating-container)) a')).map((card) => {
         return card.href.split("/").at(-2) + ':' + card.href.split("/").at(-1)
     })
     if (document.querySelector('[data-testid="entityTitle"]') && !document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container')) {
@@ -89,13 +103,13 @@ function getRatings(songIDs) {
         method: 'GET',
         headers: headers
     })
-        .then(response => response.json())  // Parse the JSON response
+        .then(response => response.json())
         .then(data => {
-            return data.ratings;  // Return the JSON data
+            return data.ratings;
         })
         .catch(error => {
             console.error('Error fetching ratings:', error);
-            throw error;  // Optionally throw an error if fetch fails
+            throw error;
         });
 }
 
@@ -104,6 +118,7 @@ function populateRatings(ratings) {
     populatePageRating(ratings)
     populateCardRatings(ratings)
     populateNowPlaying(ratings)
+    populateHomePageCards(ratings)
 }
 
 function populateRowRatings(ratings) {
@@ -136,6 +151,22 @@ function populateNowPlaying(ratings) {
         panelDiv.children[0].appendChild(widgetDivClone)
     }
 
+    function addToFullScreen() {
+        const fullScreenTrack = document.querySelector('.npv-track')
+        const fullScreenRating = document.querySelector('.npv-track .rating-container')
+
+        if (!fullScreenTrack || (fullScreenRating && fullScreenRating.getAttribute('song-id') === nowPlayingID)) {
+            return
+        }
+        if (fullScreenRating) {
+            fullScreenRating.remove()
+        }
+        const widgetDiv = document.querySelector('[data-testid="now-playing-widget"] .rating-container')
+        const widgetDivClone = widgetDiv.cloneNode(true)
+        addRatingClick(widgetDivClone)
+        fullScreenTrack.appendChild(widgetDivClone)
+    }
+
     const panelDiv = document.querySelector('[data-testid="NPV_Panel_OpenDiv"] .rating-container')
     const widgetDiv = document.querySelector('[data-testid="now-playing-widget"] .rating-container')
     let rating = ratings.filter((r) => {
@@ -143,6 +174,7 @@ function populateNowPlaying(ratings) {
     })[0]
     if (!rating) {
         addToPanel()
+        addToFullScreen()
         return
     }
     if (panelDiv) {
@@ -154,6 +186,7 @@ function populateNowPlaying(ratings) {
     let ratingDiv = generateRating(rating)
     document.querySelector('[data-testid="now-playing-widget"]').childNodes[1].appendChild(ratingDiv)
     addToPanel()
+    addToFullScreen()
 }
 
 function populatePageRating(ratings) {
@@ -185,6 +218,17 @@ function populateCardRatings(ratings){
                 card.querySelector('.rating-container').remove()
             }
             card.appendChild(generateRating(rating))
+        })
+    }
+}
+
+function populateHomePageCards(ratings){
+    for (let rating of ratings) {
+        Array.from(document.querySelectorAll('.Z35BWOA10YGn5uc9YgAp')).filter((card) => {return card.querySelector('a').href.split("/").at(-2) + ":" + card.querySelector('a').href.split("/").at(-1) === rating["spotify_id"]}).forEach((card) => {
+            if (card.querySelector('.rating-container')) {
+                card.querySelector('.rating-container').remove()
+            }
+            card.querySelector('.TbrIq3NG2VYFoAUMSmp9').appendChild(generateRating(rating))
         })
     }
 }
@@ -264,11 +308,11 @@ function updateRating(method, songID, rating) {
     })
         .then(response => response.json())
         .then(data => {
-            return populateRatings([data]);  // Return the JSON data
+            return populateRatings([data]);
         })
         .catch(error => {
             console.error('Error fetching ratings:', error);
-            throw error;  // Optionally throw an error if fetch fails
+            throw error;
         })
 }
 

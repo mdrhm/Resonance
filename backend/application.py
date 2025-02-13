@@ -3,7 +3,7 @@ from flask_cors import CORS
 import json
 import os
 from supabase import create_client, Client
-from spotify import get_tracks, get_albums, get_artists, get_playlists
+from spotify import get_tracks, get_albums, get_artists, get_playlists, get_track_id
 
 app = Flask(__name__)
 CORS(app)
@@ -58,6 +58,11 @@ def user_ratings(user, entity_type):
     if supabase.table("rating").select("rating, spotify_id").eq("user_id", user).like("spotify_id", f"{entity_type}%").order("rating_id", desc=True).limit(limit).offset(offset + limit).execute().data:
         info["next_page"] = f"https://resonanceapi.pythonanywhere.com/users/{user}/{entity_type}s?offset={offset + limit}&limit={limit}"
     return info
+
+@app.route('/albums/<album>/tracks', methods=['GET'])
+def track_from_album(album):
+    track_name = request.args.get('name')
+    return {"id": "track:" + get_track_id(album, track_name)}
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True, port=8000)

@@ -131,6 +131,7 @@
     right: 15px;
     top: 15px;
     scale: 1.25;
+    cursor: pointer;
 }
 
 .modal-container [aria-label="Duration"] svg {
@@ -183,4 +184,11 @@ button.open-modal {
 button.open-modal img {
     filter: invert(1);
     height: 25px;
+}
+
+.modal-container [role="presentation"] .Ih5mmxAJFDIBYVcQQrrN {
+    height: 100%;
+    [data-encore-id="card"] {
+        height: 100%;
+    }
 }

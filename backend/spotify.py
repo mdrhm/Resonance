@@ -2,6 +2,7 @@ import os
 import requests
 import base64
 from dotenv import load_dotenv
+from functools import lru_cache
 from multiprocessing import Pool
 
 load_dotenv()
@@ -44,11 +45,11 @@ def get_tracks(ids):
             "album": {
                 "name": track["album"]["name"],
                 "url": track["album"]["external_urls"]["spotify"]
-                },
+            },
             "length": ms_to_min_sec(track["duration_ms"]),
             "explicit": str(track["explicit"]).lower(),
             "rating": list(filter(lambda id: id["spotify_id"].split(":")[1] == track["id"], ids))[0]["rating"]
-            }
+        }
 
     if not ids:
         return []
@@ -74,7 +75,7 @@ def get_albums(ids):
             "artwork": album["images"][0]["url"],
             "year": album["release_date"][:4],
             "rating": list(filter(lambda id: id["spotify_id"].split(":")[1] == album["id"], ids))[0]["rating"]
-            }
+        }
 
     if not ids:
         return []
@@ -98,7 +99,7 @@ def get_artists(ids):
             "name": artist["name"],
             "artwork": artist["images"][0]["url"],
             "rating": list(filter(lambda id: id["spotify_id"].split(":")[1] == artist["id"], ids))[0]["rating"]
-            }
+        }
 
     if not ids:
         return []
@@ -124,9 +125,9 @@ def get_playlist(id):
             "owner": {
                 "name": playlist["owner"]["display_name"],
                 "url": playlist["owner"]["external_urls"]["spotify"]
-                },
+            },
             "rating": id["rating"]
-            }
+        }
 
     search_url = "https://api.spotify.com/v1/playlists/" + str(id["spotify_id"].split(":")[1])
     headers = {
@@ -142,3 +143,17 @@ def get_playlist(id):
 def get_playlists(ids):
     with (Pool(processes=4) as P):
         return list(filter(lambda x: bool(x), list(P.map(get_playlist, ids))))
+
+
+def get_track_id(album_id, song_name):
+    search_url = "https://api.spotify.com/v1/albums/" + album_id
+    headers = {
+        "Authorization": f"Bearer {get_access_token()}"
+    }
+    album_response = requests.get(search_url, headers=headers)
+    album = album_response.json()
+    if album.get("error"):
+        return None
+    return list(filter(lambda x: x["name"] == song_name, album["tracks"]["items"]))[0]["id"]
+
+# print(get_track_id(input("Album:"), input("Song Name: ")))

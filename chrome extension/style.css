@@ -8,10 +8,17 @@
         margin-right: 5px;
     }
 }
+[data-testid="now-playing-widget"] [aria-label="Add to playlist"], [data-testid="NPV_Panel_OpenDiv"] [aria-label="Add to playlist"] {
+    margin-right: 0px !important;
+    position: initial !important;
+}
 
 [aria-label="Add to playlist"], [aria-label="Add to Liked Songs"] {
     margin-right: 25px !important;
+    position: relative;
+    right: 10px;
 }
+
 
 .give-rating > span:hover:before {
     content: "\2605";
@@ -213,4 +220,28 @@
 
 [data-testid="add-to-playlist-button"] {
     min-width: fit-content !important;
+}
+
+.npv-main-container {
+    .rating-container {
+        height: 30px;
+        max-width: 30px !important;
+        font-size: 500%;
+        justify-content: start;
+    }
+    .rating {
+        display: flex;
+        justify-content: center;
+        align-items: baseline;
+    }
+}
+
+.Z35BWOA10YGn5uc9YgAp .rating-container {
+    height: 15px;
+    font-size: 85%;
+    padding: 10px 0px;
+    justify-content: start;
+    .out-of {
+        display: none;
+    }
 }
