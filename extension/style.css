@@ -214,8 +214,8 @@
     }
 }
 
-[data-testid="global-nav-bar"] div:nth-child(1) {
-    gap: 0px;
+.pIM9jg__39NIpOvXG89b {
+    gap: 0px !important;
 }
 
 [data-testid="add-to-playlist-button"] {

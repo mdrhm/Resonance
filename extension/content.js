@@ -211,7 +211,7 @@ function populatePageRating(ratings) {
 
 function populateCardRatings(ratings){
     for (rating of ratings) {
-        Array.from(document.querySelectorAll('[data-encore-id="card"]:has(a), [data-testid="top-result-card"]')).filter((card) => {
+        Array.from(document.querySelectorAll('[data-encore-id="card"]:has(a), [data-testid="top-result-card"] .mXNT9H2GU7lDW4cGx0q1')).filter((card) => {
             return card.querySelector("a").href.split("/").at(-2) + ':' + card.querySelector("a").href.split("/").at(-1) === rating["spotify_id"]
         }).forEach((card) => {
             if (card.querySelector('.rating-container')) {
