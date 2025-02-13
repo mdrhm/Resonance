@@ -8,7 +8,8 @@
         margin-right: 5px;
     }
 }
-[data-testid="now-playing-widget"] [aria-label="Add to playlist"], [data-testid="NPV_Panel_OpenDiv"] [aria-label="Add to playlist"] {
+[data-testid="now-playing-widget"] [aria-label="Add to playlist"], [data-testid="NPV_Panel_OpenDiv"] [aria-label="Add to playlist"],
+[data-testid="now-playing-widget"] [aria-label="Add to Liked Songs"], [data-testid="NPV_Panel_OpenDiv"] [aria-label="Add to Liked Songs"] {
     margin-right: 0px !important;
     position: initial !important;
 }
@@ -91,7 +92,7 @@
     position: absolute;
 }
 
-[data-testid="now-playing-widget"], [data-testid="NPV_Panel_OpenDiv"], :has(> [data-testid="entityTitle"]) {
+[data-testid="now-playing-widget"], [data-testid="NPV_Panel_OpenDiv"], :has(> [data-testid="entityTitle"], > [data-testid="adaptiveEntityTitle"]) {
     .rating-container {
         flex-direction: row-reverse;
         align-items: center;

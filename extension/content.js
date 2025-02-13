@@ -66,7 +66,7 @@ function getSongIDs() {
     let songIDs = Array.from(document.querySelectorAll('[data-encore-id="card"]:not(:has(.rating-container)):has(a) a, [data-testid="tracklist-row"]:not(:has(.rating-container)) [data-testid="internal-track-link"], [data-testid="tracklist-row"]:not(:has(.rating-container)) a.btE2c3IKaOXZ4VNAb8WQ, [data-testid="top-result-card"]:not(:has(.rating-container)) a:has(div), .Z35BWOA10YGn5uc9YgAp:not(:has(.rating-container)) a')).map((card) => {
         return card.href.split("/").at(-2) + ':' + card.href.split("/").at(-1)
     })
-    if (document.querySelector('[data-testid="entityTitle"]') && !document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container')) {
+    if (document.querySelector('[data-testid="entityTitle"], [data-testid="adaptiveEntityTitle"]') && !document.querySelector(':has(> [data-testid="entityTitle"], > [data-testid="adaptiveEntityTitle"]) .rating-container')) {
         songIDs.push(window.location.href.split("/")[3] + ':' + window.location.href.split("/")[4].split("?")[0])
     }
 
@@ -198,15 +198,15 @@ function populatePageRating(ratings) {
     if (!pageRating) {
         return
     }
-    if (document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container')) {
-        document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container').remove()
+    if (document.querySelector(':has(> [data-testid="entityTitle"], > [data-testid="adaptiveEntityTitle"]) .rating-container')) {
+        document.querySelector(':has(> [data-testid="entityTitle"], > [data-testid="adaptiveEntityTitle"]) .rating-container').remove()
     }
     const rating =  generateRating(pageRating)
     if (pageRating["spotify_id"] === 'user:' + userID) {
         rating.classList.add("self")
         rating.querySelector(".ratings").remove()
     }
-    document.querySelector(':has(> [data-testid="entityTitle"])').appendChild(rating)
+    document.querySelector(':has(> [data-testid="entityTitle"], > [data-testid="adaptiveEntityTitle"])').appendChild(rating)
 }
 
 function populateCardRatings(ratings){
