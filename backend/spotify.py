@@ -2,7 +2,6 @@ import os
 import requests
 import base64
 from dotenv import load_dotenv
-from functools import lru_cache
 from multiprocessing import Pool
 
 load_dotenv()
@@ -155,5 +154,3 @@ def get_track_id(album_id, song_name):
     if album.get("error"):
         return None
     return list(filter(lambda x: x["name"] == song_name, album["tracks"]["items"]))[0]["id"]
-
-# print(get_track_id(input("Album:"), input("Song Name: ")))
