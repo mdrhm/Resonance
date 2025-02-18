@@ -43,6 +43,9 @@ async function getNowPlayingID() {
     }
 
     let nowPlayingTrack = document.querySelector('[data-testid="now-playing-widget"] a')
+    if (!nowPlayingTrack) {
+        return
+    }
     if (!nowPlayingTrack.href.includes('album')) {
         document.querySelector('[data-testid="NPV_Panel_OpenDiv"] .rating-container')?.remove()
         document.querySelector('[data-testid="now-playing-widget"] .rating-container')?.remove()
