@@ -1,3 +1,5 @@
+const BACKEND_URL = 'https://resonanceapi.pythonanywhere.com'
+
 let userID, nowPlayingID
 let nowPlayingInfo = {}
 
@@ -9,7 +11,7 @@ function addLogo() {
     const plus = document.createElement('div');
     plus.innerHTML = '+'
     const resonanceLogo = logoContainer.children[0].cloneNode(true)
-    resonanceLogo.innerHTML = '<img src="https://resonanceapi.pythonanywhere.com/images/logo.svg">'
+    resonanceLogo.innerHTML = `<img src="${BACKEND_URL}/images/logo.svg">`
     logoContainer.appendChild(plus)
     logoContainer.appendChild(resonanceLogo)
 }
@@ -36,7 +38,7 @@ async function getTrackIDs(tracks){
     console.log(tracks)
     tracks = tracks.map((track) => {return {"album": track["album"], "name": encodeURIComponent(track["name"])}})
     console.log(tracks)
-    const response = await fetch(`https://resonanceapi.pythonanywhere.com/track-ids?tracks=${JSON.stringify(tracks)}`);
+    const response = await fetch(`${BACKEND_URL}/track-ids?tracks=${JSON.stringify(tracks)}`);
     const data = await response.json();
     return data["ids"]
 }
@@ -93,9 +95,8 @@ async function addAnchorToTracks() {
         song.querySelector('.btE2c3IKaOXZ4VNAb8WQ').outerHTML = `<a draggable="false" class="btE2c3IKaOXZ4VNAb8WQ" href="/track/${trackID.split(":").at(-1)}" tabindex="-1"> ${song.querySelector('.btE2c3IKaOXZ4VNAb8WQ').outerHTML}</a>`
     })
 
-    getRatings(trackIDs.map((track) => {track["track"]})).then(data => {
-        populateRatings(data)
-    })
+    let trackRatings = await getRatings(trackIDs.map((track) => {track["track"]}))
+    populateRatings(trackRatings)
 }
 
 function getSongIDs() {
@@ -121,7 +122,7 @@ function markRated() {
     document.querySelectorAll('[role="row"]:not(.rated):has([data-testid="internal-track-link"])').forEach((el) => el.classList.add("rated"))
 }
 
-function getRatings(songIDs) {
+async function getRatings(songIDs) {
     if (songIDs.length === 0) {
         return new Promise((resolve, reject) => {
             resolve([])
@@ -129,24 +130,10 @@ function getRatings(songIDs) {
     }
 
     songIDs = JSON.stringify(songIDs)
-    let headers = new Headers();
-    headers.append('Content-Type', 'application/json');
-    headers.append('Accept', 'application/json');
-    headers.append('Access-Control-Allow-Origin', 'https://open.spotify.com');
-    headers.append('Access-Control-Allow-Credentials', 'true');
 
-    return fetch(`https://resonanceapi.pythonanywhere.com/ratings?${(userID) ? 'user=' + userID + '&' : ''}song=${songIDs}`, {
-        method: 'GET',
-        headers: headers
-    })
-        .then(response => response.json())
-        .then(data => {
-            return data.ratings;
-        })
-        .catch(error => {
-            console.error('Error fetching ratings:', error);
-            throw error;
-        });
+    const response = await fetch(`${BACKEND_URL}/ratings?${(userID) ? `user=${userID}&` : ''}song=${songIDs}`)
+    const data = await response.json();
+    return data.ratings;
 }
 
 function populateRatings(ratings) {
@@ -332,51 +319,19 @@ function formatNumberOfRatings(numOfRatings) {
     return (numOfRatings/(Math.pow(1000, commas))).toFixed(1) + abvs[commas - 1]
 }
 
-function updateRating(method, songID, rating) {
-    let headers = new Headers();
-    headers.append('Content-Type', 'application/json');
-    headers.append('Accept', 'application/json');
-    headers.append('Access-Control-Allow-Origin', 'https://open.spotify.com');
-    headers.append('Access-Control-Allow-Credentials', 'true');
-    return fetch(`https://resonanceapi.pythonanywhere.com/ratings?user=${userID}&song=${songID}&rating=${rating}`, {
-        method: method,
-        headers: headers
-    })
-        .then(response => response.json())
-        .then(data => {
-            return populateRatings([data]);
-        })
-        .catch(error => {
-            console.error('Error fetching ratings:', error);
-            throw error;
-        })
+async function updateRating(method, songID, rating) {
+    const response = await fetch(`${BACKEND_URL}/ratings?user=${userID}&song=${songID}&rating=${rating}`, {
+        method: method})
+    const data = await response.json();
+    return populateRatings([data]);
 }
 
 
-setInterval(() => {
+setInterval(async () => {
     addLogo()
     addAnchorToTracks()
-    getUserID().then(user => {
-        getNowPlayingID().then(nPI => {
-            nowPlayingID = nPI
-            userID = user
-            getRatings(getSongIDs()).then(data => {
-                populateRatings(data)
-            })
-        })
-    })
+    userID = await getUserID()
+    nowPlayingID = await getNowPlayingID()
+    let ratings = await getRatings(getSongIDs())
+    populateRatings(ratings)
 }, 1000)
-
-
-// MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-//
-// var observer = new MutationObserver(function(mutations, observer) {
-//     console.log(getUserID())
-//     console.log(getSongIDs())
-//     markRated()
-// });
-//
-// observer.observe(document, {
-//     subtree: true,
-//     attributes: true
-// });

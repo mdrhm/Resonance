@@ -220,43 +220,39 @@ function changeButtons(buttonClicked) {
 
 }
 
-function renderTracks() {
+async function renderTracks() {
     changeButtons('#songs-button')
     createTrackListDiv('tracks')
     const trackList = document.querySelector('.track-list');
-    getInfo('tracks').then((tracks) => {
-        trackList.innerHTML += tracks.map((track, index) => createTrackHTML(track, index)).join('') || `<div class="no-info-fetched"><p>${currentUserName()} has not rated any songs yet</p></div>`
-    });
+    const tracks = await getInfo('tracks')
+    trackList.innerHTML += tracks.map((track, index) => createTrackHTML(track, index)).join('') || `<div class="no-info-fetched"><p>${currentUserName()} has not rated any songs yet</p></div>`
     setupInfiniteScroll()
 }
 
-function renderAlbums() {
+async function renderAlbums() {
     changeButtons('#albums-button')
     createTrackListDiv('albums')
     const trackList = document.querySelector('.track-list');
-    getInfo('albums').then((albums) => {
-        trackList.innerHTML = albums.map((album, index) => createAlbumHTML(album, index)).join('') || `<div class="no-info-fetched"><p>${currentUserName()} has not rated any albums yet</p></div>`
-    });
+    const albums = await getInfo('albums')
+    trackList.innerHTML = albums.map((album, index) => createAlbumHTML(album, index)).join('') || `<div class="no-info-fetched"><p>${currentUserName()} has not rated any albums yet</p></div>`
     setupInfiniteScroll()
 }
 
-function renderArtists() {
+async function renderArtists() {
     changeButtons('#artists-button')
     createTrackListDiv('artists')
     const trackList = document.querySelector('.track-list');
-    getInfo('artists').then((artists) => {
-        trackList.innerHTML = artists.map((artist, index) => createArtistHTML(artist, index)).join('') || `<div class="no-info-fetched"><p>${currentUserName()} has not rated any artists yet</p></div>`
-    });
+    const artists = await getInfo('artists')
+    trackList.innerHTML = artists.map((artist, index) => createArtistHTML(artist, index)).join('') || `<div class="no-info-fetched"><p>${currentUserName()} has not rated any artists yet</p></div>`
     setupInfiniteScroll()
 }
 
-function renderPlaylists() {
+async function renderPlaylists() {
     changeButtons('#playlists-button')
     createTrackListDiv('playlists')
     const trackList = document.querySelector('.track-list');
-    getInfo('playlists').then((playlists) => {
-        trackList.innerHTML = playlists.map((playlist, index) => createPlaylistHTML(playlist, index)).join('') || `<div class="no-info-fetched"><p>${currentUserName()} has not rated any playlists yet</p></div>`
-    });
+    const playlists = await getInfo('playlists')
+    trackList.innerHTML = playlists.map((playlist, index) => createPlaylistHTML(playlist, index)).join('') || `<div class="no-info-fetched"><p>${currentUserName()} has not rated any playlists yet</p></div>`
     setupInfiniteScroll()
 }
 
@@ -338,26 +334,10 @@ function closeDiv() {
 }
 
 async function getInfo(entityType) {
-    let headers = new Headers();
-    headers.append('Content-Type', 'application/json');
-    headers.append('Accept', 'application/json');
-    headers.append('Access-Control-Allow-Origin', 'https://open.spotify.com');
-    headers.append('Access-Control-Allow-Credentials', 'true');
-
-    try {
-        const response = await fetch(`https://resonanceapi.pythonanywhere.com/users/${currentUserID()}/${entityType}`, {
-            method: 'GET',
-            headers: headers,
-        });
-        const data = await response.json();
-
-        nextPageUrl = data["next_page"] || null;
-
-        return data[entityType];
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        throw error;
-    }
+    const response = await fetch(`${BACKEND_URL}/users/${currentUserID()}/${entityType}`);
+    const data = await response.json();
+    nextPageUrl = data["next_page"] || null;
+    return data[entityType];
 }
 
 function currentUserID() {
@@ -415,7 +395,7 @@ async function fetchNextPage() {
 setInterval(() => {
     if (window.location.href.split("/").at(-2) === 'user' && !document.querySelector('.open-modal') && document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container')) {
         const modalButton = document.createElement('div');
-        modalButton.innerHTML = `<button class = 'open-modal'><img src="https://resonanceapi.pythonanywhere.com/images/logo.svg">Resonate</button>`
+        modalButton.innerHTML = `<button class = 'open-modal'><img src="${BACKEND_URL}/images/logo.svg">Resonate</button>`
         modalButton.firstChild.addEventListener('click', initializeDiv)
         document.querySelector(':has(> [data-testid="entityTitle"]) .rating-container').prepend(modalButton.firstChild)
     }
