@@ -135,7 +135,7 @@
 }
 
 .modal-container [aria-label="Duration"] svg {
-    margin-right: -33px;
+    margin-right: -13px !important;
 }
 
 .modal-container [data-testid="tracklist-row"] {
@@ -190,5 +190,50 @@ button.open-modal img {
     height: 100%;
     [data-encore-id="card"] {
         height: 100%;
+        width: 100%;
+    }
+}
+
+.modal-container .kcRGDn {
+    box-sizing: border-box;
+    position: relative;
+    border-radius: var(--encore-corner-radius-larger,6px);
+    min-block-size: 48px;
+    z-index: 0;
+    color: var(--text-base,#000000);
+    padding-block: 12px;
+    padding-inline: 12px;
+    --animation-speed: 300ms;
+    --animation-ease: ease;
+    --bg-inset-change-press: -4px;
+    cursor: pointer;
+}
+
+.modal-container .hscyXl {
+    flex-direction: column;
+    row-gap: var(--encore-spacing-tighter-2,8px);
+}
+
+.modal-container .RBShQ {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -moz-box-orient: vertical;
+    overflow: hidden;
+}
+
+.modal-container .kcRGDn:hover {
+    background-color: #1f1f1f;
+    inset: 0px;
+}
+
+.modal-container {
+    [data-testid="tracklist-row"]:has([aria-colindex="4"]), [role="row"]:has([aria-colindex="4"]) {
+        [aria-colindex="3"] {
+            margin-left: initial;
+            max-width: initial;
+        }
+        [aria-colindex="2"] {
+            max-width: initial;
+        }
     }
 }

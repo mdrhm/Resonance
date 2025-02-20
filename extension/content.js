@@ -32,6 +32,14 @@ async function getUserID(){
     return userID
 }
 
+async function getTrackIDs(tracks){
+    console.log(tracks)
+    tracks = tracks.map((track) => {return {"album": track["album"], "name": encodeURIComponent(track["name"])}})
+    console.log(tracks)
+    const response = await fetch(`https://resonanceapi.pythonanywhere.com/track-ids?tracks=${JSON.stringify(tracks)}`);
+    const data = await response.json();
+    return data["ids"]
+}
 async function getNowPlayingID() {
     if (!document.querySelector('[data-testid="user-widget-link"]')) {
         return
@@ -58,11 +66,36 @@ async function getNowPlayingID() {
         name: nowPlayingTrack.text,
         album: nowPlayingTrack.href.split("/").at(-1)
     }
+    const nowPlayingResponse = await getTrackIDs([nowPlayingInfo])
+    return nowPlayingResponse[0]["track"]
+}
 
-    const response = await fetch(`https://resonanceapi.pythonanywhere.com/albums/${nowPlayingInfo["album"]}/tracks?name=${encodeURIComponent(nowPlayingInfo["name"])}`);
-    const data = await response.json();
-    return data["id"]
+async function addAnchorToTracks() {
+    const tracksWithoutAnchors = document.querySelectorAll('[data-testid="tracklist-row"]:not(:has(a.btE2c3IKaOXZ4VNAb8WQ))')
 
+    let tracks = Array.from(tracksWithoutAnchors).map(
+        (song) => {
+            return {
+                "name": song.querySelector('.btE2c3IKaOXZ4VNAb8WQ').innerText,
+                "album": song.querySelector('._TH6YAXEzJtzSxhkGSqu a').href.split("/").at(-1)
+            }
+        })
+
+    if (tracks.length === 0){
+        return
+    }
+    let trackIDs = await getTrackIDs(tracks)
+
+    tracksWithoutAnchors.forEach( (song) => {
+        let trackName = song.querySelector('.btE2c3IKaOXZ4VNAb8WQ').innerText
+        let albumID = song.querySelector('._TH6YAXEzJtzSxhkGSqu a').href.split("/").at(-1)
+        let trackID = trackIDs.filter((track) => {return track["name"] === trackName && track["album"] === albumID})[0]["track"]
+        song.querySelector('.btE2c3IKaOXZ4VNAb8WQ').outerHTML = `<a draggable="false" class="btE2c3IKaOXZ4VNAb8WQ" href="/track/${trackID.split(":").at(-1)}" tabindex="-1"> ${song.querySelector('.btE2c3IKaOXZ4VNAb8WQ').outerHTML}</a>`
+    })
+
+    getRatings(trackIDs.map((track) => {track["track"]})).then(data => {
+        populateRatings(data)
+    })
 }
 
 function getSongIDs() {
@@ -322,6 +355,7 @@ function updateRating(method, songID, rating) {
 
 setInterval(() => {
     addLogo()
+    addAnchorToTracks()
     getUserID().then(user => {
         getNowPlayingID().then(nPI => {
             nowPlayingID = nPI

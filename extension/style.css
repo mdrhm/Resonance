@@ -245,3 +245,38 @@
         display: none;
     }
 }
+
+[data-testid="tracklist-row"]:has([aria-colindex="4"]), [role="row"]:has([aria-colindex="4"]) {
+    [aria-colindex="3"] {
+        margin-left: -100px;
+        max-width: 100%;
+    }
+    [aria-colindex="2"] {
+        max-width: 75%;
+    }
+}
+
+[data-testid="tracklist-row"]:has([aria-colindex="5"]), [role="row"]:has([aria-colindex="5"]) {
+    [aria-colindex="3"] {
+        margin-left: initial;
+        max-width: 100%;
+    }
+    [aria-colindex="2"] {
+        max-width: initial;
+    }
+    @container (width < 900px) {
+        [aria-colindex="4"] {
+            display: none;
+        }
+    }
+}
+
+[data-testid="search-tracks-result"]{
+    [aria-colindex="1"] {
+        max-width: 79%;
+    }
+}
+
+[aria-label="Duration"] {
+    margin-right: 20px !important;
+}

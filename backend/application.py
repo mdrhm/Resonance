@@ -3,7 +3,7 @@ from flask_cors import CORS
 import json
 import os
 from supabase import create_client, Client
-from spotify import get_tracks, get_albums, get_artists, get_playlists, get_track_id
+from spotify import get_tracks, get_albums, get_artists, get_playlists, get_track_ids
 
 app = Flask(__name__)
 CORS(app)
@@ -43,7 +43,7 @@ def ratings():
 @app.route('/users/<user>/<entity_type>s', methods=['GET'])
 def user_ratings(user, entity_type):
     offset = 0 if not request.args.get('offset') else max(0, int(request.args.get('offset')))
-    limit = 50 if not request.args.get('limit') else int(request.args.get('limit'))
+    limit = min(20, int(request.args.get('limit', 50))) if entity_type == 'album' else int(request.args.get('limit', 50))
     response = supabase.table("rating").select("rating, spotify_id").eq("user_id", user).like("spotify_id", f"{entity_type}%").order("rating_id", desc=True).limit(limit).offset(offset).execute()
     entities = response.data
     match entity_type:
@@ -59,10 +59,13 @@ def user_ratings(user, entity_type):
         info["next_page"] = f"https://resonanceapi.pythonanywhere.com/users/{user}/{entity_type}s?offset={offset + limit}&limit={limit}"
     return info
 
-@app.route('/albums/<album>/tracks', methods=['GET'])
-def track_from_album(album):
-    track_name = request.args.get('name')
-    return {"id": "track:" + get_track_id(album, track_name)}
+@app.route('/track-ids', methods=['GET'])
+def track_from_album():
+    tracks = json.loads(request.args.get('tracks'))
+    tracks_with_ids = []
+    for i in range(0, len(tracks), 20):
+        tracks_with_ids += get_track_ids(tracks[i:min(i + 20, len(tracks))])
+    return {"ids": tracks_with_ids}
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True, port=8000)

@@ -144,13 +144,19 @@ def get_playlists(ids):
         return list(filter(lambda x: bool(x), list(P.map(get_playlist, ids))))
 
 
-def get_track_id(album_id, song_name):
-    search_url = "https://api.spotify.com/v1/albums/" + album_id
+def get_track_ids(tracks):
+    search_url = "https://api.spotify.com/v1/albums"
+    params = {
+        "ids": ",".join(list(map(lambda track: track["album"], tracks)))
+    }
     headers = {
         "Authorization": f"Bearer {get_access_token()}"
     }
-    album_response = requests.get(search_url, headers=headers)
-    album = album_response.json()
-    if album.get("error"):
-        return None
-    return list(filter(lambda x: x["name"] == song_name, album["tracks"]["items"]))[0]["id"]
+    albums_response = requests.get(search_url, headers=headers, params=params)
+    albums = albums_response.json()
+    if albums.get('error'):
+        return albums
+    for track in tracks:
+        album_for_track = list(filter(lambda album: album["id"] == track["album"], albums["albums"]))[0]
+        track["track"] = "track:" + list(filter(lambda x: x["name"] == track["name"], album_for_track["tracks"]["items"]))[0]["id"]
+    return tracks
