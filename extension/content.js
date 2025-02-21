@@ -35,10 +35,8 @@ async function getUserID(){
 }
 
 async function getTrackIDs(tracks){
-    console.log(tracks)
     tracks = tracks.map((track) => {return {"album": track["album"], "name": encodeURIComponent(track["name"])}})
-    console.log(tracks)
-    const response = await fetch(`${BACKEND_URL}/track-ids?tracks=${JSON.stringify(tracks)}`);
+    const response = await fetch(`${BACKEND_URL}/track-ids?user=${userID}&tracks=${JSON.stringify(tracks)}`);
     const data = await response.json();
     return data["ids"]
 }
@@ -69,6 +67,7 @@ async function getNowPlayingID() {
         album: nowPlayingTrack.href.split("/").at(-1)
     }
     const nowPlayingResponse = await getTrackIDs([nowPlayingInfo])
+    populateRatings([nowPlayingResponse[0]["rating"]])
     return nowPlayingResponse[0]["track"]
 }
 
@@ -95,7 +94,7 @@ async function addAnchorToTracks() {
         song.querySelector('.btE2c3IKaOXZ4VNAb8WQ').outerHTML = `<a draggable="false" class="btE2c3IKaOXZ4VNAb8WQ" href="/track/${trackID.split(":").at(-1)}" tabindex="-1"> ${song.querySelector('.btE2c3IKaOXZ4VNAb8WQ').outerHTML}</a>`
     })
 
-    let trackRatings = await getRatings(trackIDs.map((track) => {track["track"]}))
+    let trackRatings = trackIDs.map((track) => {return track["rating"]})
     populateRatings(trackRatings)
 }
 

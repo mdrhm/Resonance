@@ -271,12 +271,86 @@
     }
 }
 
+[data-testid="tracklist-row"]:has([aria-colindex="6"]), [role="row"]:has([aria-colindex="6"]) {
+    [aria-colindex="2"] {
+        max-width: 80%;
+    }
+    [aria-colindex="3"], [aria-colindex="4"], [aria-colindex="5"] {
+        margin-left: -50px;
+        max-width: 80%;
+    }
+    @container (width < 900px) {
+        [aria-colindex="3"], [aria-colindex="4"], [aria-colindex="5"] {
+            max-width: 80%;
+            display: flex;
+            justify-content: start;
+        }
+    }
+    @container (width < 500px) {
+        .rating-container {
+            padding-left: 45px;
+        }
+    }
+}
+
+[data-testid="tracklist-row"]:has([aria-colindex="1"]), [role="row"]:has([aria-colindex="1"]) {
+    @container (width < 550px) {
+        .rating-container {
+            .out-of, .ratings {
+                display: none;
+            }
+            .rating {
+                visibility: visible !important;
+            }
+            padding-left: 20px;
+        }
+        [aria-colindex="2"] {
+            width: 80%;
+        }
+    }
+}
+
+[data-testid="tracklist-row"]:has([aria-colindex="5"]), [role="row"]:has([aria-colindex="5"]) {
+    @container (width < 800px) {
+        [aria-colindex="3"] {
+            width: 50%;
+        }
+        [aria-colindex="2"] {
+            max-width: 80%;
+        }
+    }
+}
+
+[aria-label="Spotify – Search"], [aria-label="Top tracks this month"] {
+    @container (width < 750px) {
+        [aria-colindex="3"] {
+            padding-left: 50px;
+        }
+    }
+}
+
+[data-testid="recommended-track"] {
+    @container (width < 800px) {
+        [aria-colindex="2"] {
+            width: 50% !important;
+        }
+        [aria-colindex="1"] {
+            width: 80%;
+        }
+    }
+}
+
 [data-testid="search-tracks-result"]{
     [aria-colindex="1"] {
-        max-width: 79%;
+        max-width: 75%;
     }
 }
 
 [aria-label="Duration"] {
-    margin-right: 20px !important;
+    margin-right: 30px !important;
+}
+
+[data-testid="more-button"] {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
 }

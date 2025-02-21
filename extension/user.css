@@ -135,7 +135,7 @@
 }
 
 .modal-container [aria-label="Duration"] svg {
-    margin-right: -13px !important;
+    margin-right: -23px !important;
 }
 
 .modal-container [data-testid="tracklist-row"] {
