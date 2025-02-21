@@ -61,10 +61,15 @@ def user_ratings(user, entity_type):
 
 @app.route('/track-ids', methods=['GET'])
 def track_from_album():
+    user_id = request.args.get('user')
     tracks = json.loads(request.args.get('tracks'))
     tracks_with_ids = []
     for i in range(0, len(tracks), 20):
         tracks_with_ids += get_track_ids(tracks[i:min(i + 20, len(tracks))])
+    response = supabase.rpc("get_song_ratings", {"user_id": user_id, "song_ids": list(map(lambda t: t["track"], tracks_with_ids))}).execute()
+    data = response.data
+    for track in tracks_with_ids:
+        track["rating"] = list(filter(lambda r: r["spotify_id"] == track["track"], data))[0]
     return {"ids": tracks_with_ids}
 
 if __name__ == "__main__":
