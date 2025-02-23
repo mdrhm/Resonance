@@ -13,6 +13,8 @@
     "48": "logo.png",
     "128": "logo.png"
   },
+  "permissions": ["storage"],
+  "host_permissions": ["https://resonanceapi.pythonanywhere.com/*"],
   "version": "1.1.4",
   "description": "Rate your favorite Spotify tracks effortlessly",
   "permissions": [

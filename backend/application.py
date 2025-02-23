@@ -42,8 +42,14 @@ def ratings():
 
 @app.route('/users/<user>/<entity_type>s', methods=['GET'])
 def user_ratings(user, entity_type):
-    offset = 0 if not request.args.get('offset') else max(0, int(request.args.get('offset')))
-    limit = min(20, int(request.args.get('limit', 50))) if entity_type == 'album' else int(request.args.get('limit', 50))
+    offset = max(0, int(request.args.get('offset', 0)))
+    limits = {
+        "track": 50,
+        "album": 20,
+        "artist": 50,
+        "playlist": 15
+    }
+    limit = max(0, min(limits[entity_type], int(request.args.get('limit', limits[entity_type]))))
     response = supabase.table("rating").select("rating, spotify_id").eq("user_id", user).like("spotify_id", f"{entity_type}%").order("rating_id", desc=True).limit(limit).offset(offset).execute()
     entities = response.data
     match entity_type:

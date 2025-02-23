@@ -99,7 +99,7 @@ async function addAnchorToTracks() {
 }
 
 function getSongIDs() {
-    let songIDs = Array.from(document.querySelectorAll('[data-encore-id="card"]:not(:has(.rating-container)):has(a) a, [data-testid="tracklist-row"]:not(:has(.rating-container)) [data-testid="internal-track-link"], [data-testid="tracklist-row"]:not(:has(.rating-container)) a.btE2c3IKaOXZ4VNAb8WQ, [data-testid="top-result-card"]:not(:has(.rating-container)) a:has(div), .Z35BWOA10YGn5uc9YgAp:not(:has(.rating-container)) a')).map((card) => {
+    let songIDs = Array.from(document.querySelectorAll('[data-encore-id="card"]:not(:has(.rating-container)):has(a) a, [data-testid="tracklist-row"]:not(:has(.rating-container)) [data-testid="internal-track-link"], [data-testid="tracklist-row"]:not(:has(.rating-container)) a.btE2c3IKaOXZ4VNAb8WQ, [data-testid="top-result-card"]:not(:has(.rating-container)) a:has(div), .Z35BWOA10YGn5uc9YgAp:not(:has(.rating-container)) a, [data-encore-id="box"]:not(:has(.rating-container)) header a.YSflHyCWx4tGL7LrqtLE')).map((card) => {
         return card.href.split("/").at(-2) + ':' + card.href.split("/").at(-1)
     })
     if (document.querySelector('[data-testid="entityTitle"], [data-testid="adaptiveEntityTitle"]') && !document.querySelector(':has(> [data-testid="entityTitle"], > [data-testid="adaptiveEntityTitle"]) .rating-container')) {
@@ -141,6 +141,7 @@ function populateRatings(ratings) {
     populateCardRatings(ratings)
     populateNowPlaying(ratings)
     populateHomePageCards(ratings)
+    populateBoxRatings(ratings)
 }
 
 function populateRowRatings(ratings) {
@@ -251,6 +252,17 @@ function populateHomePageCards(ratings){
                 card.querySelector('.rating-container').remove()
             }
             card.querySelector('.TbrIq3NG2VYFoAUMSmp9').appendChild(generateRating(rating))
+        })
+    }
+}
+
+function populateBoxRatings(ratings) {
+    for (let rating of ratings) {
+        Array.from(document.querySelectorAll('[data-encore-id="box"]')).filter((box) => {return box.querySelector('a.YSflHyCWx4tGL7LrqtLE').href.split("/").at(-2) + ":" + box.querySelector('a').href.split("/").at(-1) === rating["spotify_id"]}).forEach((box) => {
+            if (box.querySelector('.rating-container')) {
+                box.querySelector('.rating-container').remove()
+            }
+            box.querySelector('header.XKQRNQAUOAjRwwjuUnRU').appendChild(generateRating(rating))
         })
     }
 }

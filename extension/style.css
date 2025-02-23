@@ -354,3 +354,15 @@
     padding-left: 5px !important;
     padding-right: 5px !important;
 }
+
+[data-encore-id="box"] .rating-container {
+    width: 100px;
+    justify-content: end;
+    min-height: 40px;
+    font-size: 110%;
+    min-width: initial;
+
+    .out-of {
+        display: none;
+    }
+}
