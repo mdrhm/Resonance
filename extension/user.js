@@ -334,7 +334,7 @@ function closeDiv() {
 }
 
 async function getInfo(entityType) {
-    const response = await fetch(`${BACKEND_URL}/users/${currentUserID()}/${entityType}`);
+    const response = await fetch(`${BACKEND_URL}/users/${currentUserID()}/${entityType}`, {credentials: "include"});
     const data = await response.json();
     nextPageUrl = data["next_page"] || null;
     return data[entityType];
@@ -366,7 +366,7 @@ async function fetchNextPage() {
     if (!nextPageUrl) return;
 
     try {
-        const response = await fetch(nextPageUrl);
+        const response = await fetch(nextPageUrl, {credentials: "include"});
         const data = await response.json();
 
         if (data.tracks) {

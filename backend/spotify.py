@@ -3,8 +3,38 @@ import requests
 import base64
 from dotenv import load_dotenv
 from multiprocessing import Pool
+import application
 
 load_dotenv()
+
+def get_user_tokens(code):
+    client_id = os.getenv('SPOTIFY_CLIENT_ID')
+    client_secret = os.getenv('SPOTIFY_CLIENT_SECRET')
+
+    client_credentials = f"{client_id}:{client_secret}"
+    base64_credentials = base64.b64encode(client_credentials.encode()).decode()
+
+    token_url = "https://accounts.spotify.com/api/token"
+    headers = {
+        "Authorization": f"Basic {base64_credentials}"
+    }
+
+    data = {
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": "http://resonanceapi.pythonanywhere.com/auth",
+    }
+
+    response = requests.post(token_url, headers=headers, data=data)
+    response_data = response.json()
+
+    user = requests.get("https://api.spotify.com/v1/me", headers={"Authorization": f"Bearer {response_data['access_token']}"})
+    user_data = user.json()
+
+    return {
+        "refresh_token": response_data["refresh_token"],
+        "user_id": user_data['id']
+    }
 
 def get_access_token():
     client_id = os.getenv('SPOTIFY_CLIENT_ID')
@@ -17,14 +47,14 @@ def get_access_token():
     headers = {
         "Authorization": f"Basic {base64_credentials}"
     }
-    data = {
-        "grant_type": "client_credentials"
-    }
+
+    refresh_token = application.get_refresh_token()
+
+    data = {"grant_type": "refresh_token", "refresh_token": refresh_token} if refresh_token else {"grant_type": "client_credentials"}
 
     response = requests.post(token_url, headers=headers, data=data)
     response_data = response.json()
 
-    # Extract the access token
     return response_data['access_token']
 
 def get_tracks(ids):

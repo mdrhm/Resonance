@@ -1,6 +1,6 @@
 const BACKEND_URL = 'https://resonanceapi.pythonanywhere.com'
 
-let userID, nowPlayingID
+let nowPlayingID
 let nowPlayingInfo = {}
 
 function addLogo() {
@@ -15,28 +15,10 @@ function addLogo() {
     logoContainer.appendChild(plus)
     logoContainer.appendChild(resonanceLogo)
 }
-async function getUserID(){
-    let userID = Array.from(document.querySelectorAll('[data-encore-id="listRow"]')).filter((row) => {return row.getAttribute('aria-labelledby').includes('user')}).map((row) => {return row.getAttribute('aria-labelledby').split(':').at(2)})[0]
-    if (userID) {
-        return userID
-    }
-    if (!document.querySelector('[data-testid="user-widget-link"]')){
-        return null
-    }
-    const menu = document.querySelector('[role="menu"]')
-    if(!menu) {
-        await document.querySelector('[data-testid="user-widget-link"]').click()
-    }
-    userID  = await document.querySelector('[role="menu"]').childNodes[1].querySelector("a").href.split("/").at(-1)
-    if(!menu) {
-        document.querySelector('[data-testid="user-widget-link"]').click()
-    }
-    return userID
-}
 
 async function getTrackIDs(tracks){
     tracks = tracks.map((track) => {return {"album": track["album"], "name": encodeURIComponent(track["name"])}})
-    const response = await fetch(`${BACKEND_URL}/track-ids?user=${userID}&tracks=${JSON.stringify(tracks)}`);
+    const response = await fetch(`${BACKEND_URL}/track-ids?tracks=${JSON.stringify(tracks)}`, {credentials: "include"});
     const data = await response.json();
     return data["ids"]
 }
@@ -130,7 +112,7 @@ async function getRatings(songIDs) {
 
     songIDs = JSON.stringify(songIDs)
 
-    const response = await fetch(`${BACKEND_URL}/ratings?${(userID) ? `user=${userID}&` : ''}song=${songIDs}`)
+    const response = await fetch(`${BACKEND_URL}/ratings?song=${songIDs}`, {credentials: "include"})
     const data = await response.json();
     return data.ratings;
 }
@@ -225,7 +207,7 @@ function populatePageRating(ratings) {
         document.querySelector(':has(> [data-testid="entityTitle"], > [data-testid="adaptiveEntityTitle"]) .rating-container').remove()
     }
     const rating =  generateRating(pageRating)
-    if (pageRating["spotify_id"] === 'user:' + userID) {
+    if (pageRating["user_rating"]["self"]) {
         rating.classList.add("self")
         rating.querySelector(".ratings").remove()
     }
@@ -258,7 +240,7 @@ function populateHomePageCards(ratings){
 
 function populateBoxRatings(ratings) {
     for (let rating of ratings) {
-        Array.from(document.querySelectorAll('[data-encore-id="box"]')).filter((box) => {return box.querySelector('a.YSflHyCWx4tGL7LrqtLE').href.split("/").at(-2) + ":" + box.querySelector('a').href.split("/").at(-1) === rating["spotify_id"]}).forEach((box) => {
+        Array.from(document.querySelectorAll('[data-encore-id="box"]')).filter((box) => {return box.querySelector('a')?.href.split("/").at(-2) + ":" + box.querySelector('a')?.href.split("/").at(-1) === rating["spotify_id"]}).forEach((box) => {
             if (box.querySelector('.rating-container')) {
                 box.querySelector('.rating-container').remove()
             }
@@ -306,7 +288,7 @@ function addRatingClick(container) {
     let songID = container.getAttribute('song-id')
     for (let i = 0; i < 5; i++) {
         ratings[i].addEventListener("click", () => {
-            if (!userID) {
+            if (document.querySelector('[data-testid="login-button"]')) {
                 document.querySelector('[data-testid="login-button"]').click()
             } else if (Array.from(container.querySelectorAll('.existing-rating span')).filter((star) => {
                 return star.innerHTML === '★'
@@ -331,17 +313,25 @@ function formatNumberOfRatings(numOfRatings) {
 }
 
 async function updateRating(method, songID, rating) {
-    const response = await fetch(`${BACKEND_URL}/ratings?user=${userID}&song=${songID}&rating=${rating}`, {
-        method: method})
+    const response = await fetch(`${BACKEND_URL}/ratings?song=${songID}&rating=${rating}`, {
+        method: method,
+        credentials: "include"})
     const data = await response.json();
     return populateRatings([data]);
 }
 
+async function authenticateUser() {
+    const response = await fetch(`${BACKEND_URL}/auth`, {credentials: "include"})
+    if (!response.ok) {
+        window.location.href = `${BACKEND_URL}/login?redirect=${window.location.href}`
+    }
+}
+
+authenticateUser()
 
 setInterval(async () => {
     addLogo()
     addAnchorToTracks()
-    userID = await getUserID()
     nowPlayingID = await getNowPlayingID()
     let ratings = await getRatings(getSongIDs())
     populateRatings(ratings)
